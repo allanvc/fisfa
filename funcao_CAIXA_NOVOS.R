@@ -33,6 +33,10 @@ funcao_CAIXA_NOVOS<-function(dti.loc, teste2_bancos.loc, mesbox_string, anobox_s
   #teste_bancos.df[,"CPF"] <- as.character(teste_bancos.df[,"CPF"])
   #ATENCAO: PARA O CPF, SE OS DOIS NAO ESTIVEREM EM NUMERIC, NAO FUNCIONA
   
+  # v0.9.6.5 -- cleaning
+    rm(teste_bancos.dt)
+  
+  
   print("Dimensao Arquivo Banco (LINHASxCOLUNAS):" )
   print(dim(teste_bancos.df))
   #por padrao jah vem header = FALSE
@@ -274,9 +278,28 @@ funcao_CAIXA_NOVOS<-function(dti.loc, teste2_bancos.loc, mesbox_string, anobox_s
   # aplicando no data.frame do BANCO:
   novos_geral2.1.df<-novos_geral2.df
   # 10.05.2016 - v0.9.2 - acrescentado fase_SIAPI 0035 como sendo tb amortizacao
-  novos_geral2.1.df$fase <- ifelse (novos_geral2.df$fase == "0032" | 
-                                      novos_geral2.df$fase == "0033" | 
-                                      novos_geral2.df$fase == "0035", "A", "U" )
+  ## v.0.9.6.5 -- 2018.12.11 - problema de back compatibility do R (data.table) com leitura
+    #... da coluna fase_SIAPI -- data.table passou a ler como numeric
+    # (sugestao Giva)
+    if (as.numeric(as.character(R.Version()$minor)) >= 5) {
+      novos_geral2.1.df$fase <- ifelse (
+        novos_geral2.df$fase == 0032 |
+          novos_geral2.df$fase == 0033 |
+          novos_geral2.df$fase == 0035,
+        "A",
+        "U"
+      )
+      
+    } else {
+      novos_geral2.1.df$fase <- ifelse (
+        novos_geral2.df$fase == "0032" |
+          novos_geral2.df$fase == "0033" |
+          novos_geral2.df$fase == "0035",
+        "A",
+        "U"
+      )
+      
+    }
   
   # aplicando no data.frame da DTI:
   teste_dti2.df<-teste_dti1.2.df

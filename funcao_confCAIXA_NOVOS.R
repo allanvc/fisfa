@@ -16,6 +16,10 @@ funcao_confCAIXA_NOVOS<-function(teste2_bancos.loc, mesbox, anobox, ...){ #soh r
   # e tem tb a opcao de data.table show.progress
   ###PERFEITO!!! JAH FUNCIONA SOH COM ESSAS ALTERACOES!!!
   teste_bancos.df<-as.data.frame(teste_bancos.dt, stringsAsFactors = FALSE, dec=',')
+  
+  # v0.9.6.5 -- cleaning
+    rm(teste_bancos.dt)
+  
   print("Dimensao Arquivo Banco (LINHASxCOLUNAS):" )
   print(dim(teste_bancos.df))
   #str(teste_bancos.df)
@@ -71,7 +75,26 @@ funcao_confCAIXA_NOVOS<-function(teste2_bancos.loc, mesbox, anobox, ...){ #soh r
     
     ### 2.2) CONTRATOS NOVOS EM AMORTIZACAO (1.5%a.a)  
     
-    novos2.2.df<-subset( novos2.df, (fase_SIAPI=='0032' | fase_SIAPI=='0033' | fase_SIAPI=='0035')  )
+    ## v.0.9.6.5 -- 2018.12.11 - problema de back compatibility do R (data.table) com leitura
+    #... da coluna fase_SIAPI -- data.table passou a ler como numeric
+    # (sugestao Giva)
+    if (as.numeric(as.character(R.Version()$minor)) >= 5) {
+      novos2.2.df <-
+        subset(novos2.df,
+               (fase_SIAPI == 0032 | fase_SIAPI == 0033 | fase_SIAPI == 0035))
+      # eh soh usar exclamacao para negar os da outra fase
+      # o numero estah proximo
+      
+    } else {
+      novos2.2.df <-
+        subset(novos2.df,
+               (
+                 fase_SIAPI == '0032' | fase_SIAPI == '0033' | fase_SIAPI == '0035'
+               ))
+      # eh soh usar exclamacao para negar os da outra fase
+      # o numero estah proximo
+      
+    }
     # eh soh usar exclamacao para negar os da outra fase
     # o numero estah proximo
     obs_novos2.2 <- nrow(novos2.2.df)

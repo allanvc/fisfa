@@ -8,34 +8,30 @@ funcao_confCAIXA_NOVOS<-function(teste2_bancos.loc, mesbox, anobox, ...){ #soh r
   dir.create(path=dir3)
   
   
-  teste2_bancos.loc<-gtkFileChooserGetFilename(filename2)
+  banco.loc<-gtkFileChooserGetFilename(filename2)
   #library(data.table)
   #teste2_bancos.loc<-file.choose()
-  teste_bancos.dt<-fread(teste2_bancos.loc, dec=',')#, header = TRUE, fill = TRUE, sep=';', dec=',', stringsAsFactors = FALSE)
+  banco.dt<-fread(banco.loc, dec=',')#, header = TRUE, fill = TRUE, sep=';', dec=',', stringsAsFactors = FALSE)
   #recebe os mesmos parAmetros de read.table
   # e tem tb a opcao de data.table show.progress
   ###PERFEITO!!! JAH FUNCIONA SOH COM ESSAS ALTERACOES!!!
-  teste_bancos.df<-as.data.frame(teste_bancos.dt, stringsAsFactors = FALSE, dec=',')
+  banco.df<-as.data.frame(banco.dt, stringsAsFactors = FALSE, dec=',')
   
-  # v0.9.6.5 -- cleaning
-    rm(teste_bancos.dt)
+  # v0.9.6.5.0 -- cleaning
+  rm(banco.dt)
   
   print("Dimensao Arquivo Banco (LINHASxCOLUNAS):" )
-  print(dim(teste_bancos.df))
+  print(dim(banco.df))
   #str(teste_bancos.df)
   #teste_bancos.df[,6]<-as.numeric(teste_bancos.df[,6])
   
   #v0.8 2016.01.25
   #pegando somente as colunas que interessam:
-  teste_bancos.df<-teste_bancos.df[,c(5,7,8,12,13,14,15)] # nao precisamos importar o nome, pois o arquivo jah eh bem gde
+  banco.df<-banco.df[,c(5,7,8,12,13,14,15)] # nao precisamos importar o nome, pois o arquivo jah eh bem gde
   #str(teste_bancos.df)
   
   #padronizando os nomes das colunas:
-  teste5.df<-teste_bancos.df
-  colnames(teste5.df)<-c("cpf","sem_ref","ano_ref", "total_div", "dias_atraso", "fase_SIAPI", "total_aplic")
-  
-  teste5.2.df<-teste5.df
-  #str(teste5.2.df)  
+  colnames(banco.df)<-c("cpf","sem_ref","ano_ref", "total_div", "dias_atraso", "fase_SIAPI", "total_aplic")
   
   #CALCULO
   
@@ -47,20 +43,30 @@ funcao_confCAIXA_NOVOS<-function(teste2_bancos.loc, mesbox, anobox, ...){ #soh r
   
   #####2)CONTRATOS NOVOS todos APOS 2S/2009:
   #obs: NAO HA DIVISAO ENTRE UTILIZACAO E CARENCIA
-  novos.df<-teste5.2.df[!( teste5.2.df$ano_ref <= 2009 & is.na(teste5.2.df$ano_ref)==FALSE ), ]
+  novos.df<-banco.df[!( banco.df$ano_ref <= 2009 & is.na(banco.df$ano_ref)==FALSE ), ]
   # coloquei o ! para trazer todos os que nao sao legado (a regra eh a mesma do legado soh que com exclamacao):
   
+  # v0.9.6.5.0 - cleannig
+  rm(banco.df)
+  
   # FICANDO SOH COM OS ABAIXO DE 360 DIAS PARA O GERAL -- IGUAL NO BANCO DO BRASIL:
-  novos2.df<-subset( novos.df, dias_atraso<=360 )
+  novos.df<-subset( novos.df, dias_atraso<=360 )
   # aparecem pouco menos de 100 contratos a mais do que mostra a CAIXA
   
-  obs_novos2 <- nrow(novos2.df) # temos que exportar tb a informacao sobre as linhas  
+  obs_novos <- nrow(novos.df) # temos que exportar tb a informacao sobre as linhas  
   
     # SUB COMPARACAO DOS NOVOS 
     
     ### 2.1) CONTRATOS NOVOS EM UTILIZACAO (2%a.a)  
     # 10.05.2016 - v0.9_1 - acrescentado fase 0035 como sendo fase de amortizacao
-    novos2.1.df<-subset( novos2.df, !(fase_SIAPI=='0032' | fase_SIAPI=='0033' | fase_SIAPI=='0035')  )
+    
+  
+    # v0.9.6.5.0 (28dez18)
+    # acertando fase siapi -- problema backcompatibility data.table v1.11
+    novos.df$fase_SIAPI <- as.character(as.numeric(as.character(novos.df$fase_SIAPI)))
+    novos.df$fase_SIAPI <- str_pad(novos.df$fase_SIAPI, 4, pad= "0", "left")
+  
+    novos2.1.df<-subset( novos.df, !(fase_SIAPI=='0032' | fase_SIAPI=='0033' | fase_SIAPI=='0035')  )
     # eh soh usar exclamacao para negar os da outra fase
     # o numero estah proximo
     obs_novos2.1 <- nrow(novos2.1.df)
@@ -76,25 +82,9 @@ funcao_confCAIXA_NOVOS<-function(teste2_bancos.loc, mesbox, anobox, ...){ #soh r
     ### 2.2) CONTRATOS NOVOS EM AMORTIZACAO (1.5%a.a)  
     
     ## v.0.9.6.5 -- 2018.12.11 - problema de back compatibility do R (data.table) com leitura
-    #... da coluna fase_SIAPI -- data.table passou a ler como numeric
-    # (sugestao Giva)
-    if (as.numeric(as.character(R.Version()$minor)) >= 5) {
-      novos2.2.df <-
-        subset(novos2.df,
-               (fase_SIAPI == 0032 | fase_SIAPI == 0033 | fase_SIAPI == 0035))
-      # eh soh usar exclamacao para negar os da outra fase
-      # o numero estah proximo
-      
-    } else {
-      novos2.2.df <-
-        subset(novos2.df,
-               (
-                 fase_SIAPI == '0032' | fase_SIAPI == '0033' | fase_SIAPI == '0035'
-               ))
-      # eh soh usar exclamacao para negar os da outra fase
-      # o numero estah proximo
-      
-    }
+    
+    novos2.2.df <- subset(novos.df, (fase_SIAPI == '0032' | fase_SIAPI == '0033' | fase_SIAPI == '0035'))  
+  
     # eh soh usar exclamacao para negar os da outra fase
     # o numero estah proximo
     obs_novos2.2 <- nrow(novos2.2.df)
@@ -114,7 +104,7 @@ funcao_confCAIXA_NOVOS<-function(teste2_bancos.loc, mesbox, anobox, ...){ #soh r
   #... da do Banco do Brasil
   
   
-  resultadoprevia.df<-data.frame( "Quant._Contratos"=c(obs_novos2.1, obs_novos2.2, obs_novos2),
+  resultadoprevia.df<-data.frame( "Quant._Contratos"=c(obs_novos2.1, obs_novos2.2, obs_novos),
                                  "Valor_Total_Taxa"=c(VRM2.1, VRM2.2, VRMT_novos),
                                 "_valor_alternativo_" = c(obs_novos2.1*25, obs_novos2.2*35, (obs_novos2.1*25) + (obs_novos2.2*35) ))
   

@@ -275,31 +275,19 @@ funcao_CAIXA_NOVOS<-function(dti.loc, teste2_bancos.loc, mesbox_string, anobox_s
   
   #aplicando "U" e "A".
   
+  # v0.9.6.5.0 (28dez18)
+  # acertando fase siapi banco -- problema backcompatibility data.table v1.11
+  novos_geral2.df$fase_SIAPI <- as.character(as.numeric(as.character(novos_geral2.df$fase_SIAPI)))
+  
+  novos_geral2.df$fase_SIAPI <- str_pad(novos_geral2.df$fase_SIAPI, 4, pad= "0", "left")
+  
   # aplicando no data.frame do BANCO:
   novos_geral2.1.df<-novos_geral2.df
   # 10.05.2016 - v0.9.2 - acrescentado fase_SIAPI 0035 como sendo tb amortizacao
-  ## v.0.9.6.5 -- 2018.12.11 - problema de back compatibility do R (data.table) com leitura
-    #... da coluna fase_SIAPI -- data.table passou a ler como numeric
-    # (sugestao Giva)
-    if (as.numeric(as.character(R.Version()$minor)) >= 5) {
-      novos_geral2.1.df$fase <- ifelse (
-        novos_geral2.df$fase == 0032 |
-          novos_geral2.df$fase == 0033 |
-          novos_geral2.df$fase == 0035,
-        "A",
-        "U"
-      )
-      
-    } else {
-      novos_geral2.1.df$fase <- ifelse (
-        novos_geral2.df$fase == "0032" |
-          novos_geral2.df$fase == "0033" |
-          novos_geral2.df$fase == "0035",
-        "A",
-        "U"
-      )
-      
-    }
+  novos_geral2.1.df$fase <- ifelse (novos_geral2.df$fase == "0032" | 
+                                    novos_geral2.df$fase == "0033" |
+                                    novos_geral2.df$fase == "0035", "A", "U")
+  
   
   # aplicando no data.frame da DTI:
   teste_dti2.df<-teste_dti1.2.df

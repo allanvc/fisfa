@@ -266,6 +266,11 @@ funcao_CAIXA_NOVOS<-function(dti.loc, teste2_bancos.loc, mesbox_string, anobox_s
   ### transformar todos da DTI que sao fase 1 e 2 em "U" (utilizacao) e os que sao fase 3 em "A" (amortizacao)
   ### para o arquivo da CAIXA, tudo que for 0032 e 0033 vira "A", o resto vira "U"
   
+  # v0.9.6.5.0 (28dez18)
+  # acertando fase siapi banco -- problema back compatibility data.table v1.11
+  novos_geral2.df$fase_SIAPI <- as.character(as.numeric(as.character(novos_geral2.df$fase_SIAPI)))
+  
+  novos_geral2.df$fase_SIAPI <- str_pad(novos_geral2.df$fase_SIAPI, 4, pad= "0", "left")
   
   #padronizando os nomes das colunas:
   colnames(novos_geral2.df)[c(5,6)]<-c("fase","vl_lib") # na CAIXA, soh precisamos alterar a fase e o total aplic por vl_lib
@@ -275,12 +280,7 @@ funcao_CAIXA_NOVOS<-function(dti.loc, teste2_bancos.loc, mesbox_string, anobox_s
   
   #aplicando "U" e "A".
   
-  # v0.9.6.5.0 (28dez18)
-  # acertando fase siapi banco -- problema backcompatibility data.table v1.11
-  novos_geral2.df$fase_SIAPI <- as.character(as.numeric(as.character(novos_geral2.df$fase_SIAPI)))
-  
-  novos_geral2.df$fase_SIAPI <- str_pad(novos_geral2.df$fase_SIAPI, 4, pad= "0", "left")
-  
+    
   # aplicando no data.frame do BANCO:
   novos_geral2.1.df<-novos_geral2.df
   # 10.05.2016 - v0.9.2 - acrescentado fase_SIAPI 0035 como sendo tb amortizacao
